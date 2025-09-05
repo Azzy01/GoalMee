@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdeaCapture - Note Taking App</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+</head>
+<body>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="logo">IdeaCapture</div>
+            <nav class="main-nav">
+                <a href="#" class="nav-item has-subnav active" data-page="notes">Notes</a>
+                <div id="notesGroupsSubnav" class="subnav">
+                    <a href="#" class="nav-sub-item active" data-group="all">All Notes</a>
+                    </div>
+                <a href="#" class="nav-item" data-page="tasks">Tasks</a>
+                <a href="#" class="nav-item" data-page="archive">Archive</a>
+                <a href="#" class="nav-item" data-page="calendar">Calendar</a>
+                <a href="#" class="nav-item" data-page="settings">Settings</a>
+            </nav>
+            <div class="auth-status-sidebar">
+                <div class="auth-form" id="authForm">
+                    <input type="email" id="emailInput" placeholder="Email">
+                    <input type="password" id="passwordInput" placeholder="Password">
+                    <button class="btn" id="signInBtn">Sign In</button>
+                    <button class="btn" id="signUpBtn">Sign Up</button>
+                </div>
+                <div class="user-info" id="userInfo" style="display:none;">
+                    <span class="user-email-text" id="userEmail"></span>
+                    <button class="btn" id="signOutBtn">Sign Out</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1 id="pageTitle">Notes</h1>
+                <div class="header-actions">
+                    <button class="btn" id="newNoteBtn">+ New Note</button>
+                </div>
+            </header>
+
+            <div class="content-container">
+                <p id="authMessage" class="auth-message"></p>
+
+                <div class="notes-page active-page" id="notesPage">
+                    <div class="content-type-selector">
+                        <div class="content-type active" data-type="text">Text Note</div>
+                        <div class="content-type" data-type="link">Link</div>
+                        <div class="content-type" data-type="image">Image</div>
+                        <div class="content-type" data-type="audio">Voice Recording</div>
+                    </div>
+                    
+                    <div class="note-form" id="noteForm">
+                        <div class="form-group">
+                            <label for="noteTitle">Title</label>
+                            <input type="text" id="noteTitle" placeholder="Add a title...">
+                        </div>
+                        
+                        <div class="form-group" id="textNoteGroup">
+                            <label for="noteContent">Content</label>
+                            <textarea id="noteContent" placeholder="Write your idea here..."></textarea>
+                        </div>
+                        
+                        <div class="form-group hidden" id="linkNoteGroup">
+                            <label for="noteLink">URL</label>
+                            <input type="url" id="noteLink" placeholder="https://example.com">
+                        </div>
+                        
+                        <div class="form-group hidden" id="imageNoteGroup">
+                            <label for="noteImage">Upload Image</label>
+                            <input type="file" id="noteImage" accept="image/*" style="display: none;">
+                            <button type="button" class="btn" onclick="document.getElementById('noteImage').click()">
+                                Choose Image
+                            </button>
+                            <div id="imagePreview" class="image-preview hidden"></div>
+                            <div id="uploadProgress" class="upload-progress hidden">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span>Uploading...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group hidden" id="audioNoteGroup">
+                            <label for="noteAudio">Record Audio</label>
+                            <button class="btn" id="recordBtn">Start Recording</button>
+                            <audio id="audioPlayback" controls class="hidden"></audio>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="noteTags">Tags (comma separated)</label>
+                            <input type="text" id="noteTags" placeholder="product, idea, feature">
+                        </div>
+                    
+                        <div class="form-group">
+                            <label for="noteGroup">Group</label>
+                            <select id="noteGroup">
+                                <option value="none">None</option>
+                                <option value="project">Project</option>
+                                <option value="personal">Personal</option>
+                                <option value="research">Research</option>
+                            </select>
+                        </div>
+                    
+                        <div class="form-group">
+                            <label for="notePriority">Priority</label>
+                            <select id="notePriority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                    
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="noteHidden">
+                            <label for="noteHidden">Hide Note (for authenticated users)</label>
+                        </div>
+                        
+                        <button class="btn" id="saveNoteBtn">Save Idea</button>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h3>Filter by Tags:</h3>
+                        <div id="tagCloud" class="tag-cloud">
+                        </div>
+                        <button id="clearFilterBtn" class="btn hidden">Clear Filter</button>
+                    </div>
+
+                    <div class="groups-section">
+                        <h3>Filter by Groups:</h3>
+                        <div id="groupList" class="group-list">
+                            <button class="btn-group active" data-group-name="all">All</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-grid" id="notesGrid">
+                        <div class="note-card">
+                            <div class="note-header">
+                                <div class="note-title">Sample Product Idea</div>
+                                <div class="note-date">Today</div>
+                            </div>
+                            <div class="note-content">
+                                This is a sample note showing how your ideas will appear in the app.
+                            </div>
+                            <div class="note-tags">
+                                <span class="tag">sample</span>
+                                <span class="tag">idea</span>
+                            </div>
+                            <div class="note-actions">
+                                <button class="btn-edit">Edit</button>
+                                <button class="btn-archive">Archive</button>
+                                <button class="btn-delete">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="archive-page" id="archivePage">
+                    <h2>Archived Notes</h2>
+                    <div id="archivedNotesGrid" class="notes-grid">
+                        </div>
+                </div>
+            </div>
+            
+            <footer>
+                IdeaCapture - A Product Manager Learning Project
+            </footer>
+        </main>
+    </div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
