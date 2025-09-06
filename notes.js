@@ -1,110 +1,11 @@
-// ===== SUPABASE SETUP =====
-let supabase = null;
+// notes.js
+import { getSupabase, checkAuthState } from './auth.js';
 
-function initializeSupabase() {
-    try {
-        const SUPABASE_URL = 'https://fdwxcunlytbhdnnjzgua.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkd3hjdW5seXRiaGRubmp6Z3VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyOTQ3MjksImV4cCI6MjA3MTg3MDcyOX0.WqQROmzPJcfzZVoRTW2MFjryulKvw7IWGHKnaphCEcU';
-        
-        if (typeof window.supabase !== 'undefined') {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase initialized successfully!');
-            return true;
-        } else {
-            console.log('Supabase library not loaded yet');
-            return false;
-        }
-    } catch (error) {
-        console.error('Supabase initialization failed:', error);
-        return false;
-    }
-}
-
-async function getSupabase() {
-    if (!supabase) {
-        if (!initializeSupabase()) {
-            throw new Error('Supabase failed to initialize');
-        }
-    }
-    return supabase;
-}
-
-// ===== AUTHENTICATION FUNCTIONS =====
-
-async function handleSignIn(email, password) {
+// Supabase functions
+export async function saveNoteToSupabase(note) {
     try {
         const supabase = await getSupabase();
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        
-        displayAuthMessage('Signed in successfully!', 'green');
-        updateAuthUI(data.user);
-    } catch (error) {
-        displayAuthMessage(error.message, 'red');
-    }
-}
-
-async function handleSignUp(email, password) {
-    try {
-        const supabase = await getSupabase();
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        
-        displayAuthMessage('Sign up successful! Please check your email for a confirmation link.', 'green');
-        updateAuthUI(data.user);
-    } catch (error) {
-        displayAuthMessage(error.message, 'red');
-    }
-}
-
-async function handleSignOut() {
-    try {
-        const supabase = await getSupabase();
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        displayAuthMessage('Signed out successfully!', 'green');
-        updateAuthUI(null);
-    } catch (error) {
-        displayAuthMessage(error.message, 'red');
-    }
-}
-
-function displayAuthMessage(message, color) {
-    const authMessage = document.getElementById('authMessage');
-    authMessage.textContent = message;
-    authMessage.style.color = color;
-}
-
-function updateAuthUI(user) {
-    const authForm = document.getElementById('authForm');
-    const userInfo = document.getElementById('userInfo');
-    const userEmail = document.getElementById('userEmail');
-    
-    if (user) {
-        authForm.style.display = 'none';
-        userInfo.style.display = 'flex';
-        userEmail.textContent = user.email;
-    } else {
-        authForm.style.display = 'flex';
-        userInfo.style.display = 'none';
-    }
-}
-
-async function checkAuthState() {
-    const supabase = await getSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
-    updateAuthUI(user);
-    await renderGroupLinks();
-    await displayNotes();
-}
-
-// ===== SUPABASE FUNCTIONS =====
-
-async function saveNoteToSupabase(note) {
-    try {
-        const supabase = await getSupabase();
-        const { data: { user } = {} } = await supabase.auth.getUser();
+        const user = await checkAuthState();
 
         if (!user) {
             alert('Please sign in to save notes.');
@@ -140,7 +41,7 @@ async function saveNoteToSupabase(note) {
     }
 }
 
-async function getNotesFromSupabase() {
+export async function getNotesFromSupabase() {
     try {
         const supabase = await getSupabase();
         const { data, error } = await supabase
@@ -157,14 +58,14 @@ async function getNotesFromSupabase() {
     }
 }
 
-async function deleteNoteFromSupabase(noteId) {
+export async function deleteNoteFromSupabase(noteId) {
     if (!confirm('Are you sure you want to permanently delete this note?')) {
         return false;
     }
     
     try {
         const supabase = await getSupabase();
-        const { data: { user } = {} } = await supabase.auth.getUser();
+        const user = await checkAuthState();
 
         if (!user) {
             alert('Please sign in to delete notes.');
@@ -188,10 +89,10 @@ async function deleteNoteFromSupabase(noteId) {
     }
 }
 
-async function updateNoteInSupabase(noteId, updatedData) {
+export async function updateNoteInSupabase(noteId, updatedData) {
     try {
         const supabase = await getSupabase();
-        const { data: { user } = {} } = await supabase.auth.getUser();
+        const user = await checkAuthState();
 
         if (!user) {
             alert('Please sign in to update notes.');
@@ -228,14 +129,14 @@ async function updateNoteInSupabase(noteId, updatedData) {
     }
 }
 
-async function archiveNote(noteId) {
+export async function archiveNote(noteId) {
     if (!confirm('Are you sure you want to archive this note?')) {
         return;
     }
 
     try {
         const supabase = await getSupabase();
-        const { data: { user } = {} } = await supabase.auth.getUser();
+        const user = await checkAuthState();
 
         if (!user) {
             alert('Please sign in to archive notes.');
@@ -259,14 +160,14 @@ async function archiveNote(noteId) {
     }
 }
 
-async function restoreNote(noteId) {
+export async function restoreNote(noteId) {
     if (!confirm('Are you sure you want to restore this note?')) {
         return;
     }
 
     try {
         const supabase = await getSupabase();
-        const { data: { user } = {} } = await supabase.auth.getUser();
+        const user = await checkAuthState();
 
         if (!user) {
             alert('Please sign in to restore notes.');
@@ -291,13 +192,13 @@ async function restoreNote(noteId) {
     }
 }
 
-// Function to display notes with filtering and sorting
-async function displayNotes(tag = 'all', group = 'all', sort = 'created_at_desc') {
+// UI/display functions
+export async function displayNotes(tag = 'all', group = 'all', sort = 'created_at_desc') {
     const notesGrid = document.getElementById('notesGrid');
     notesGrid.innerHTML = '';
     
     const supabase = await getSupabase();
-    const { data: { user } = {} } = await supabase.auth.getUser();
+    const user = await checkAuthState();
 
     let notes = [];
     let query = supabase.from('notes').select('*');
@@ -343,13 +244,12 @@ async function displayNotes(tag = 'all', group = 'all', sort = 'created_at_desc'
     });
 }
 
-// Function to display archived notes
-async function displayArchivedNotes() {
+export async function displayArchivedNotes() {
     const archivedNotesGrid = document.getElementById('archivedNotesGrid');
     archivedNotesGrid.innerHTML = '';
 
     const supabase = await getSupabase();
-    const { data: { user } = {} } = await supabase.auth.getUser();
+    const user = await checkAuthState();
 
     if (!user) {
         archivedNotesGrid.innerHTML = '<p>Please sign in to view your archived notes.</p>';
@@ -451,9 +351,7 @@ function escapeHTML(text) {
     });
 }
 
-// ===== NOTE FORM FUNCTIONS =====
-
-function clearNoteForm() {
+export function clearNoteForm() {
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
     document.getElementById('noteLink').value = '';
@@ -467,8 +365,7 @@ function clearNoteForm() {
     clearImagePreview();
 }
 
-// ===== EVENT HANDLERS =====
-async function deleteNote(noteId) {
+export async function deleteNote(noteId) {
     if (confirm('Are you sure you want to delete this note?')) {
         const success = await deleteNoteFromSupabase(noteId);
         if (success) {
@@ -478,9 +375,9 @@ async function deleteNote(noteId) {
     }
 }
 
-async function editNote(noteId) {
+export async function editNote(noteId) {
     const supabase = await getSupabase();
-    const { data: { user } = {} } = await supabase.auth.getUser();
+    const user = await checkAuthState();
 
     if (!user) {
         alert('Please sign in to edit notes.');
@@ -525,7 +422,7 @@ async function editNote(noteId) {
     }
 }
 
-async function handleImageUpload(event) {
+export async function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     
@@ -587,8 +484,7 @@ function clearImagePreview() {
     window.currentImageUrl = null;
 }
 
-// ===== TAG FILTERING FUNCTIONS =====
-async function updateTagCloud() {
+export async function updateTagCloud() {
     const tagCloud = document.getElementById('tagCloud');
     const notes = await getNotesFromSupabase();
 
@@ -610,7 +506,7 @@ async function updateTagCloud() {
     });
 }
 
-async function filterNotesByTag(tag) {
+export async function filterNotesByTag(tag) {
     document.getElementById('clearFilterBtn').classList.remove('hidden');
 
     const notes = await getNotesFromSupabase();
@@ -632,7 +528,7 @@ function displayFilteredNotes(notes) {
     });
 }
 
-function clearFilter() {
+export function clearFilter() {
     document.getElementById('clearFilterBtn').classList.add('hidden');
 
     document.querySelectorAll('.tag-cloud .tag').forEach(el => {
@@ -642,11 +538,10 @@ function clearFilter() {
     displayNotes();
 }
 
-// ===== GROUP FUNCTIONS =====
-async function getUniqueGroups() {
+export async function getUniqueGroups() {
     try {
         const supabase = await getSupabase();
-        const { data: { user } = {} } = await supabase.auth.getUser();
+        const user = await checkAuthState();
 
         if (!user) return [];
 
@@ -665,7 +560,7 @@ async function getUniqueGroups() {
     }
 }
 
-async function renderGroupLinks() {
+export async function renderGroupLinks() {
     const notesGroupsSubnav = document.getElementById('notesGroupsSubnav');
     const groups = await getUniqueGroups();
 
@@ -681,7 +576,7 @@ async function renderGroupLinks() {
     });
 }
 
-async function renderGroupDatalist() {
+export async function renderGroupDatalist() {
     const groupOptionsDatalist = document.getElementById('groupOptions');
     const groups = await getUniqueGroups();
 
@@ -697,7 +592,7 @@ async function renderGroupDatalist() {
     });
 }
 
-async function updateGroupFilterCloud() {
+export async function updateGroupFilterCloud() {
     const groupFilterCloud = document.getElementById('groupFilterCloud');
     const groups = await getUniqueGroups();
 
@@ -710,167 +605,4 @@ async function updateGroupFilterCloud() {
         groupTag.dataset.groupFilter = group;
         groupFilterCloud.appendChild(groupTag);
     });
-
-    groupFilterCloud.addEventListener('click', (e) => {
-        const selectedGroup = e.target.dataset.groupFilter;
-        if (selectedGroup) {
-            document.querySelectorAll('#groupFilterCloud .tag').forEach(tag => tag.classList.remove('active'));
-            e.target.classList.add('active');
-            displayNotes('all', selectedGroup);
-        }
-    });
 }
-
-// ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', function() {
-    // Auth and Initialization
-    document.getElementById('signInBtn').addEventListener('click', () => {
-        const email = document.getElementById('emailInput').value;
-        const password = document.getElementById('passwordInput').value;
-        handleSignIn(email, password);
-    });
-
-    document.getElementById('signUpBtn').addEventListener('click', () => {
-        const email = document.getElementById('emailInput').value;
-        const password = document.getElementById('passwordInput').value;
-        handleSignUp(email, password);
-    });
-
-    document.getElementById('signOutBtn').addEventListener('click', () => {
-        handleSignOut();
-    });
-
-    // Navigation and Page Switching
-    document.querySelectorAll('.nav-item').forEach(link => {
-        link.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const page = e.target.getAttribute('data-page');
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            e.target.classList.add('active');
-
-            document.getElementById('notesPage').classList.remove('active-page');
-            document.getElementById('archivePage').classList.remove('active-page');
-            document.getElementById('pageTitle').textContent = e.target.textContent;
-
-            if (page === 'notes') {
-                document.getElementById('notesPage').classList.add('active-page');
-                // Use the currently selected group/sort for the notes page
-                const currentTag = document.querySelector('.tag-cloud .tag.active')?.textContent || 'all';
-                const currentGroup = document.querySelector('#notesGroupsSubnav .nav-sub-item.active')?.dataset.group || 'all';
-                const currentSort = document.getElementById('sortSelect')?.value || 'created_at_desc';
-                displayNotes(currentTag, currentGroup, currentSort);
-            } else if (page === 'archive') {
-                document.getElementById('archivePage').classList.add('active-page');
-                displayArchivedNotes();
-            }
-        });
-    });
-
-    // Fix for group navigation clicks
-    document.getElementById('notesGroupsSubnav').addEventListener('click', (e) => {
-        e.preventDefault();
-        const selectedGroup = e.target.dataset.group;
-        if (selectedGroup) {
-            document.querySelectorAll('#notesGroupsSubnav .nav-sub-item').forEach(item => item.classList.remove('active'));
-            e.target.classList.add('active');
-            displayNotes('all', selectedGroup, 'created_at_desc'); // Default to newest first
-        }
-    });
-
-    // Note Form and other event listeners
-    const contentTypes = document.querySelectorAll('.content-type');
-    const inputGroups = {
-        text: document.getElementById('textNoteGroup'),
-        link: document.getElementById('linkNoteGroup'), 
-        image: document.getElementById('imageNoteGroup'),
-        audio: document.getElementById('audioNoteGroup')
-    };
-
-    contentTypes.forEach(type => {
-        type.addEventListener('click', () => {
-            contentTypes.forEach(t => t.classList.remove('active'));
-            type.classList.add('active');
-            
-            const selectedType = type.getAttribute('data-type');
-            Object.keys(inputGroups).forEach(key => {
-                inputGroups[key].classList.toggle('hidden', key !== selectedType);
-            });
-            
-            if (selectedType !== 'image') {
-                clearImagePreview();
-            }
-        });
-    });
-
-    document.getElementById('clearFilterBtn').addEventListener('click', clearFilter);
-    document.getElementById('noteImage').addEventListener('change', handleImageUpload);
-
-    document.getElementById('sortSelect').addEventListener('change', (e) => {
-        const selectedSort = e.target.value;
-        const currentTag = document.querySelector('.tag-cloud .tag.active')?.dataset.tag || 'all';
-        const currentGroup = document.querySelector('#groupFilterCloud .tag.active')?.dataset.groupFilter || 'all';
-        displayNotes(currentTag, currentGroup, selectedSort);
-    });
-    
-    document.getElementById('saveNoteBtn').addEventListener('click', async function() {
-        const title = document.getElementById('noteTitle').value.trim();
-        const content = document.getElementById('noteContent').value.trim();
-        const linkUrl = document.getElementById('noteLink').value.trim();
-        const tags = document.getElementById('noteTags').value.trim();
-        const group = document.getElementById('noteGroup').value;
-        const priority = document.getElementById('notePriority').value;
-        const isHidden = document.getElementById('noteHidden').checked;
-        const currentType = document.querySelector('.content-type.active').getAttribute('data-type');
-        
-        if (title) {
-            let noteData = { 
-                title, 
-                tags: tags,
-                group: group,
-                priority: priority,
-                hidden: isHidden,
-            };
-            
-            if (currentType === 'text' && content) {
-                noteData.type = 'text';
-                noteData.content = content;
-            } else if (currentType === 'link' && linkUrl) {
-                noteData.type = 'link';
-                noteData.content = linkUrl;
-            } else if (currentType === 'image' && window.currentImageUrl) {
-                noteData.type = 'image';
-                noteData.content = window.currentImageUrl;
-            } else if (currentType === 'audio') {
-                noteData.type = 'audio';
-                noteData.content = 'Audio recording';
-            } else {
-                alert('Please add content for your note');
-                return;
-            }
-            
-            let savedNote;
-            if (window.editingNoteId) {
-                savedNote = await updateNoteInSupabase(window.editingNoteId, noteData);
-            } else {
-                savedNote = await saveNoteToSupabase(noteData);
-            }
-            
-            if (savedNote) {
-                clearNoteForm();
-                displayNotes();
-                updateTagCloud();
-                renderGroupDatalist();
-                updateGroupFilterCloud();
-                alert('Note saved successfully!');
-            }
-        } else {
-            alert('Please add a title for your note');
-        }
-    });
-
-    // Initial load
-    checkAuthState();
-    updateTagCloud();
-    renderGroupDatalist();
-    updateGroupFilterCloud();
-});

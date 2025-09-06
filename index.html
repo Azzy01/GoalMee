@@ -41,6 +41,16 @@
             <header class="main-header">
                 <h1 id="pageTitle">Notes</h1>
                 <div class="header-actions">
+                    <div class="sort-options">
+                        <label for="sortSelect">Sort by:</label>
+                        <select id="sortSelect">
+                            <option value="created_at_desc">Newest First</option>
+                            <option value="created_at_asc">Oldest First</option>
+                            <option value="priority_desc">Highest Priority</option>
+                            <option value="priority_asc">Lowest Priority</option>
+                            <option value="title_asc">Title (A-Z)</option>
+                        </select>
+                    </div>
                     <button class="btn" id="newNoteBtn">+ New Note</button>
                 </div>
             </header>
@@ -100,12 +110,9 @@
                     
                         <div class="form-group">
                             <label for="noteGroup">Group</label>
-                            <select id="noteGroup">
-                                <option value="none">None</option>
-                                <option value="project">Project</option>
-                                <option value="personal">Personal</option>
-                                <option value="research">Research</option>
-                            </select>
+                            <input type="text" id="noteGroup" list="groupOptions" placeholder="Select or type a group...">
+                            <datalist id="groupOptions">
+                                </datalist>
                         </div>
                     
                         <div class="form-group">
@@ -133,10 +140,10 @@
                         <button id="clearFilterBtn" class="btn hidden">Clear Filter</button>
                     </div>
 
-                    <div class="groups-section">
+                    <div class="filter-section">
                         <h3>Filter by Groups:</h3>
-                        <div id="groupList" class="group-list">
-                            <button class="btn-group active" data-group-name="all">All</button>
+                        <div id="groupFilterCloud" class="tag-cloud">
+                            <span class="tag active" data-group-filter="all">All</span>
                         </div>
                     </div>
                     
